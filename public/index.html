@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CertifyPro — Gerador de certificados</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Mea+Culpa&family=Meie+Script&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="app">
+      <header class="header">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <div>
+            <h1>CertifyPro</h1>
+            <p class="tagline">Certificados em lote, sem complicação</p>
+          </div>
+        </div>
+        <ol class="steps" id="steps" aria-label="Etapas">
+          <li data-step="1" class="active">Modelo</li>
+          <li data-step="2">Campos</li>
+          <li data-step="3">Participantes</li>
+          <li data-step="4">Gerar</li>
+        </ol>
+      </header>
+
+      <main class="main">
+        <section id="panel-1" class="panel active" aria-labelledby="t1">
+          <h2 id="t1">1. Modelo do certificado</h2>
+          <p class="hint">Envie uma imagem (PNG ou JPG) ou um PDF da primeira página como fundo.</p>
+          <div class="panel-1-upload">
+            <label class="dropzone" id="drop-template">
+              <input type="file" accept=".png,.jpg,.jpeg,.pdf" hidden id="input-template" />
+              <span class="dropzone-inner">
+                <strong>Arraste o arquivo</strong> ou clique para escolher
+              </span>
+            </label>
+            <p class="status" id="template-status" role="status"></p>
+            <div class="actions">
+              <button type="button" class="btn primary" id="btn-next-1" disabled>Continuar</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="panel-2" class="panel" aria-labelledby="t2">
+          <h2 id="t2">2. Campos do certificado</h2>
+          <p class="hint">
+            Por padrão só o <strong>Nome</strong> aparece no modelo. Marque os campos padrão que quiser, crie campos personalizados e clique em aplicar. Depois posicione cada marcador — o <strong>centro</strong> do texto (moldura tracejada) é onde será impresso.
+          </p>
+
+          <div class="field-config-panel">
+            <h3 class="field-config-title">Quais campos usar?</h3>
+            <p class="hint field-config-hint">
+              <strong>Nome</strong> vem sempre ativo. Marque CPF, data, curso, horas se precisar e adicione campos extras abaixo.
+            </p>
+            <div class="field-checkboxes" id="field-checkboxes">
+              <label class="chk-field">
+                <input type="checkbox" id="chk-nome" checked disabled />
+                Nome
+              </label>
+              <label class="chk-field">
+                <input type="checkbox" id="chk-cpf" />
+                CPF
+              </label>
+              <label class="chk-field">
+                <input type="checkbox" id="chk-data" />
+                Data
+              </label>
+              <label class="chk-field">
+                <input type="checkbox" id="chk-curso" />
+                Curso
+              </label>
+              <label class="chk-field">
+                <input type="checkbox" id="chk-horas" />
+                Horas
+              </label>
+            </div>
+            <div class="field-custom-add">
+              <span class="field-custom-title">Campo personalizado</span>
+              <div class="field-custom-row">
+                <input
+                  type="text"
+                  id="custom-label"
+                  class="field-custom-input"
+                  placeholder="Nome exibido (ex.: Instituição)"
+                  maxlength="48"
+                />
+                <input
+                  type="text"
+                  id="custom-key"
+                  class="field-custom-input"
+                  placeholder="Coluna no CSV (ex.: instituicao)"
+                  maxlength="42"
+                />
+                <button type="button" class="btn ghost" id="btn-add-custom">Adicionar</button>
+              </div>
+              <p class="hint field-config-hint">A coluna no CSV deve ser única, sem espaços (use _ se precisar). Máx. 10 campos personalizados.</p>
+              <ul class="custom-fields-list" id="custom-fields-list" aria-label="Campos personalizados adicionados"></ul>
+            </div>
+            <button type="button" class="btn primary" id="btn-apply-fields">Aplicar campos ao modelo</button>
+          </div>
+
+          <div class="editor-wrap" id="editor-wrap">
+            <div class="editor-canvas" id="editor-canvas">
+              <img id="editor-bg" alt="" />
+              <div id="field-markers-container"></div>
+            </div>
+          </div>
+          <div class="toolbar">
+            <button type="button" class="btn ghost" id="btn-preview-pdf">Pré-visualizar PDF</button>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn ghost" id="btn-back-2">Voltar</button>
+            <button type="button" class="btn primary" id="btn-next-2" disabled>Continuar</button>
+          </div>
+        </section>
+
+        <section id="panel-3" class="panel" aria-labelledby="t3">
+          <h2 id="t3">3. Lista de participantes (CSV)</h2>
+          <p class="hint">
+            O CSV deve ter <strong>uma coluna para cada campo</strong> que você ativou na etapa anterior (mesmo nome / cabeçalho). Aceita vírgula ou ponto e vírgula (Excel em português). UTF-8 recomendado.
+          </p>
+          <label class="dropzone" id="drop-csv">
+            <input type="file" accept=".csv" hidden id="input-csv" />
+            <span class="dropzone-inner">
+              <strong>Arraste o CSV</strong> ou clique para escolher
+            </span>
+          </label>
+          <p class="status" id="csv-status" role="status"></p>
+          <div class="preview-table-wrap hidden" id="csv-preview-wrap">
+            <h3>Prévia dos dados</h3>
+            <table class="preview-table" id="csv-preview-table">
+              <thead id="csv-preview-thead">
+                <tr></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn ghost" id="btn-back-3">Voltar</button>
+            <button type="button" class="btn primary" id="btn-next-3" disabled>Continuar</button>
+          </div>
+        </section>
+
+        <section id="panel-4" class="panel" aria-labelledby="t4">
+          <h2 id="t4">4. Gerar certificados</h2>
+          <p class="hint">Até 300 certificados por vez. Geração em lotes de 50 para manter o servidor estável.</p>
+          <div class="summary" id="summary"></div>
+          <div class="progress-block hidden" id="progress-block">
+            <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="progress-bar">
+              <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <p class="status" id="progress-text"></p>
+          </div>
+          <p class="status" id="gen-status" role="status"></p>
+          <div class="actions">
+            <button type="button" class="btn ghost" id="btn-back-4">Voltar</button>
+            <button type="button" class="btn primary" id="btn-generate">Gerar e baixar ZIP</button>
+            <a class="btn success hidden" id="btn-download" href="#" download>Download certificados.zip</a>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <span>CertifyPro — uso local</span>
+      </footer>
+    </div>
+    <script src="/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+node_modules
+uploads
+.git
+.gitignore
+*.log
+.DS_Store
+.cursor
+docs
+.env
+.env.*
