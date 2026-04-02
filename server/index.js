@@ -21,7 +21,7 @@ const {
   previewSampleForKey,
 } = require('./fields');
 const { parseAndValidateCsv } = require('./csvService');
-const { pdfToPngBuffer, renderPdfFirstPage } = require('./pdfRender');
+const { pdfToPngBuffer, renderPdfFirstPage, getPdfPageCount } = require('./pdfRender');
 const {
   createJob,
   getJob,
@@ -106,6 +106,7 @@ app.post('/api/session/:sessionId/template', uploadTemplate.single('template'), 
     let width;
     let height;
     let previewFile = null;
+    let templatePageCount = 1;
 
     if (isPdf) {
       const pngBuf = await pdfToPngBuffer(req.file.buffer);
@@ -114,6 +115,7 @@ app.post('/api/session/:sessionId/template', uploadTemplate.single('template'), 
       const { width: w, height: h } = await renderPdfFirstPage(req.file.buffer);
       width = w;
       height = h;
+      templatePageCount = await getPdfPageCount(req.file.buffer);
     } else {
       const img = await loadImage(req.file.buffer);
       width = img.width;
@@ -166,12 +168,14 @@ app.post('/api/session/:sessionId/template', uploadTemplate.single('template'), 
       fieldLabels,
       customFieldsMeta,
       csvRows,
+      templatePageCount,
     });
 
     res.json({
       templateType: isPdf ? 'pdf' : 'image',
       width,
       height,
+      pageCount: templatePageCount,
       previewUrl: `/uploads/${session.id}/${isPdf ? previewFile : templateName}`,
       layout,
       fieldOrder,

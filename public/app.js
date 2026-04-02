@@ -195,7 +195,15 @@
       buildMarkerDom();
       applyLayoutToFields();
       positionFieldsFromLayout();
-      showStatus(templateStatus, `Modelo carregado (${j.templateType === 'pdf' ? 'PDF' : 'imagem'}, ${j.width}×${j.height}px).`, 'ok');
+      const pageInfo =
+        j.templateType === 'pdf' && Number(j.pageCount) > 1
+          ? `, ${j.pageCount} páginas`
+          : '';
+      showStatus(
+        templateStatus,
+        `Modelo carregado (${j.templateType === 'pdf' ? 'PDF' : 'imagem'}${pageInfo}, ${j.width}×${j.height}px).`,
+        'ok',
+      );
       btnNext1.disabled = false;
       $('#btn-next-2').disabled = false;
     } catch (e) {

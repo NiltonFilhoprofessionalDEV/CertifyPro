@@ -34,10 +34,10 @@ class NodeCanvasFactory {
 }
 
 /**
- * Renderiza a primeira página do PDF para um canvas do node-canvas.
+ * Renderiza uma página do PDF para um canvas do node-canvas.
  * @returns {{ canvas: import('canvas').Canvas, width: number, height: number }}
  */
-async function renderPdfFirstPage(pdfBuffer) {
+async function renderPdfPage(pdfBuffer, pageNumber) {
   const pdfjs = await getPdfjs();
   const data = new Uint8Array(pdfBuffer);
   const factory = new NodeCanvasFactory();
@@ -47,7 +47,7 @@ async function renderPdfFirstPage(pdfBuffer) {
     useSystemFonts: true,
   });
   const pdf = await loadingTask.promise;
-  const page = await pdf.getPage(1);
+  const page = await pdf.getPage(pageNumber);
   const viewport = page.getViewport({ scale: 1 });
   const canvasAndContext = factory.create(viewport.width, viewport.height);
   const renderContext = {
@@ -62,6 +62,48 @@ async function renderPdfFirstPage(pdfBuffer) {
   };
 }
 
+async function renderPdfPages(pdfBuffer) {
+  const pdfjs = await getPdfjs();
+  const data = new Uint8Array(pdfBuffer);
+  const factory = new NodeCanvasFactory();
+  const loadingTask = pdfjs.getDocument({
+    data,
+    canvasFactory: factory,
+    useSystemFonts: true,
+  });
+  const pdf = await loadingTask.promise;
+  const pages = [];
+  for (let n = 1; n <= pdf.numPages; n += 1) {
+    const page = await pdf.getPage(n);
+    const viewport = page.getViewport({ scale: 1 });
+    const canvasAndContext = factory.create(viewport.width, viewport.height);
+    const renderContext = {
+      canvasContext: canvasAndContext.context,
+      viewport,
+    };
+    await page.render(renderContext).promise;
+    pages.push({
+      canvas: canvasAndContext.canvas,
+      width: Math.round(viewport.width),
+      height: Math.round(viewport.height),
+      pageNumber: n,
+    });
+  }
+  return pages;
+}
+
+async function getPdfPageCount(pdfBuffer) {
+  const pdfjs = await getPdfjs();
+  const data = new Uint8Array(pdfBuffer);
+  const loadingTask = pdfjs.getDocument({ data, useSystemFonts: true });
+  const pdf = await loadingTask.promise;
+  return pdf.numPages;
+}
+
+async function renderPdfFirstPage(pdfBuffer) {
+  return renderPdfPage(pdfBuffer, 1);
+}
+
 async function pdfToPngBuffer(pdfBuffer) {
   const { canvas } = await renderPdfFirstPage(pdfBuffer);
   return canvas.toBuffer('image/png');
@@ -69,5 +111,7 @@ async function pdfToPngBuffer(pdfBuffer) {
 
 module.exports = {
   renderPdfFirstPage,
+  renderPdfPages,
   pdfToPngBuffer,
+  getPdfPageCount,
 };

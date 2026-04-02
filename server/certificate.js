@@ -1,7 +1,7 @@
 const fs = require('fs/promises');
 const { createCanvas, loadImage } = require('canvas');
 const { PDFDocument } = require('pdf-lib');
-const { renderPdfFirstPage } = require('./pdfRender');
+const { renderPdfPages } = require('./pdfRender');
 const path = require('path');
 const fontkit = require('fontkit');
 const { sanitizeFontFamily, BUNDLED_WEB_FONT_FAMILIES } = require('./fonts');
@@ -166,28 +166,35 @@ function sanitizeLayoutForDraw(layout) {
 async function buildCertificatePdfBuffer(session, row) {
   ensureCanvasFonts();
   const layout = sanitizeLayoutForDraw(session.layout);
-  let baseCanvas;
+  const pageCanvases = [];
   if (session.templateType === 'image') {
     const img = await loadImage(session.templatePath);
     const w = img.width;
     const h = img.height;
-    baseCanvas = createCanvas(w, h);
+    const baseCanvas = createCanvas(w, h);
     const ctx = baseCanvas.getContext('2d');
     ctx.drawImage(img, 0, 0);
     scaleLayout(layout, session.width, session.height, w, h, ctx, row, session.fieldOrder);
+    pageCanvases.push(baseCanvas);
   } else {
     const buf = await fs.readFile(session.templatePath);
-    const { canvas, width: w, height: h } = await renderPdfFirstPage(buf);
-    const ctx = canvas.getContext('2d');
-    scaleLayout(layout, session.width, session.height, w, h, ctx, row, session.fieldOrder);
-    baseCanvas = canvas;
+    const pages = await renderPdfPages(buf);
+    if (!pages.length) throw new Error('PDF de modelo sem páginas.');
+    for (const p of pages) {
+      if (p.pageNumber === 1) {
+        const ctx = p.canvas.getContext('2d');
+        scaleLayout(layout, session.width, session.height, p.width, p.height, ctx, row, session.fieldOrder);
+      }
+      pageCanvases.push(p.canvas);
+    }
   }
-
-  const png = baseCanvas.toBuffer('image/png');
   const doc = await PDFDocument.create();
-  const embedded = await doc.embedPng(png);
-  const page = doc.addPage([embedded.width, embedded.height]);
-  page.drawImage(embedded, { x: 0, y: 0, width: embedded.width, height: embedded.height });
+  for (const pageCanvas of pageCanvases) {
+    const png = pageCanvas.toBuffer('image/png');
+    const embedded = await doc.embedPng(png);
+    const outPage = doc.addPage([embedded.width, embedded.height]);
+    outPage.drawImage(embedded, { x: 0, y: 0, width: embedded.width, height: embedded.height });
+  }
   return Buffer.from(await doc.save());
 }
 
