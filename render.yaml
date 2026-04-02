@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: certifypro
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: UPLOAD_DIR
+        value: /var/data/uploads
